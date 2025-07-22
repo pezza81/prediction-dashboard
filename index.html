@@ -1,0 +1,82 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Prediction Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f4f4f4; }
+    select { margin-top: 10px; padding: 6px; }
+  </style>
+</head>
+<body>
+  <h1>Prediction Dashboard</h1>
+  <label for="league">Filter by League:</label>
+  <select id="league" onchange="filterTable()">
+    <option value="All">All</option>
+  </select>
+  <table id="predictions">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>League</th>
+        <th>Home vs Away</th>
+        <th>Prediction</th>
+        <th>Confidence</th>
+        <th>Odds (H/D/A)</th>
+        <th>Bet Type</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    async function loadCSV() {
+      const res = await fetch('predictions.csv');
+      const text = await res.text();
+      const rows = text.split('\n').slice(1).filter(r => r.trim());
+      const data = rows.map(r => r.split(','));
+
+      const tbody = document.querySelector('#predictions tbody');
+      const select = document.getElementById('league');
+      const leagues = new Set();
+
+      data.forEach(row => {
+        leagues.add(row[1]);
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-league', row[1]);
+        tr.innerHTML = `
+          <td>${row[0]}</td>
+          <td>${row[1]}</td>
+          <td>${row[2]} vs ${row[3]}</td>
+          <td>${row[10]}</td>
+          <td>${row[11]}</td>
+          <td>${row[4]}/${row[5]}/${row[6]}</td>
+          <td>${row[13]}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      leagues.forEach(l => {
+        const option = document.createElement('option');
+        option.value = l;
+        option.textContent = l;
+        select.appendChild(option);
+      });
+    }
+
+    function filterTable() {
+      const league = document.getElementById('league').value;
+      document.querySelectorAll('#predictions tbody tr').forEach(row => {
+        row.style.display = league === 'All' || row.dataset.league === league ? '' : 'none';
+      });
+    }
+
+    loadCSV();
+  </script>
+</body>
+</html>
