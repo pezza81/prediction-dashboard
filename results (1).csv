@@ -1,0 +1,4 @@
+Date,League,Home,Away,Prediction,ActualResult,Correct,Confidence,ScoreGap
+2025-07-19,Brazil,Santos,Corinthians,A,A,Yes,Medium,0.88
+2025-07-19,Denmark,Aalborg,Odense,H,D,No,Low,0.41
+2025-07-19,USA,Inter Miami,Chicago Fire,D,D,Yes,Medium,0.53
