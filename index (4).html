@@ -1,0 +1,118 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Prediction Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background-color: #f4f4f4; }
+    select { margin-top: 10px; padding: 6px; }
+    .correct { background-color: #d4edda; }
+    .incorrect { background-color: #f8d7da; }
+  </style>
+</head>
+<body>
+  <h1>Prediction Dashboard</h1>
+
+  <h2>Latest Predictions (Auto-loaded)</h2>
+  <table id="predictions">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>League</th>
+        <th>Match</th>
+        <th>Prediction</th>
+        <th>Confidence</th>
+        <th>Odds (H/D/A)</th>
+        <th>Bet Type</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <h2>Latest Results</h2>
+  <table id="results">
+    <thead>
+      <tr>
+        <th>Date</th>
+        <th>League</th>
+        <th>Match</th>
+        <th>Prediction</th>
+        <th>Result</th>
+        <th>Correct?</th>
+        <th>Confidence</th>
+        <th>Score Gap</th>
+      </tr>
+    </thead>
+    <tbody></tbody>
+  </table>
+
+  <script>
+    async function fetchLatestFile(prefix) {
+      const api = 'https://api.github.com/repos/pezza81/Betting-predictor/contents/live-data';
+      const res = await fetch(api);
+      const files = await res.json();
+      const file = files
+        .filter(f => f.name.endsWith('.csv') && f.name.includes(prefix))
+        .sort((a, b) => b.name.localeCompare(a.name))[0];
+      return file ? file.download_url : null;
+    }
+
+    async function loadCSV(url) {
+      const res = await fetch(url);
+      const text = await res.text();
+      return text.split('\n').slice(1).filter(r => r.trim()).map(r => r.split(','));
+    }
+
+    async function loadPredictions() {
+      const url = await fetchLatestFile('predictions');
+      if (!url) return;
+      const data = await loadCSV(url);
+      const tbody = document.querySelector('#predictions tbody');
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row[0]}</td>
+          <td>${row[1]}</td>
+          <td>${row[2]} vs ${row[3]}</td>
+          <td>${row[10]}</td>
+          <td>${row[11]}</td>
+          <td>${row[4]}/${row[5]}/${row[6]}</td>
+          <td>${row[13]}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function loadResults() {
+      const url = await fetchLatestFile('results');
+      if (!url) return;
+      const data = await loadCSV(url);
+      const tbody = document.querySelector('#results tbody');
+      data.forEach(row => {
+        const tr = document.createElement('tr');
+        const correct = row[6] === 'Yes' ? 'correct' : (row[6] === 'No' ? 'incorrect' : '');
+        tr.className = correct;
+        tr.innerHTML = `
+          <td>${row[0]}</td>
+          <td>${row[1]}</td>
+          <td>${row[2]} vs ${row[3]}</td>
+          <td>${row[4]}</td>
+          <td>${row[5]}</td>
+          <td>${row[6]}</td>
+          <td>${row[7]}</td>
+          <td>${row[8]}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    loadPredictions();
+    loadResults();
+  </script>
+</body>
+</html>
